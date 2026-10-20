@@ -20,7 +20,7 @@
   <img src="renders/popup.png" alt="Study Tracker open under the top bar, with sun and water on the left, the heatmap in the middle and the Pomodoro on the right" width="860" />
 </p>
 
-I wanted one place for the timer, the water I drank and the days I studied. A browser tab for each of those was more than I needed, and the panel is always in sight. The extension is a personal tool, so it stays small and local. It has no account and makes no network requests.
+I wanted one place for the timer, the water I drank and the days I studied. A browser tab for each of those felt like too much, and the panel is always in sight. The extension is a personal tool, so it stays small and local. It has no account and makes no network requests.
 
 ## What it does
 
@@ -49,7 +49,7 @@ The middle pane shows the last 14 weeks. Each cell is a day, coloured by the hab
 
 #### Pomodoro
 
-Focus is 90 minutes by default and the break is 20. The tabs switch the timer you are looking at. A running focus block keeps going while the break tab is open, and starting a break pauses focus instead of resetting it. A focus block is logged only when the countdown reaches zero. Pausing or resetting before that gives no partial credit. The four dots above the tabs show the day's completed blocks.
+Focus is 90 minutes by default and the break is 20. The tabs switch the timer you are looking at. A running focus block keeps going while the break tab is open, and starting a break pauses focus instead of resetting it. A focus block is logged only when the countdown reaches zero. Pausing or resetting before that gives no partial credit. The four dots above the tabs show progress through the current set of four focus blocks.
 
 When a phase reaches zero, the popup switches to the next one, sends a notification and plays a chime. Auto-start is off by default; turn it on in settings to start the next phase immediately.
 
@@ -84,7 +84,7 @@ gnome-shell --version
 ### One-line installer
 
 ```sh
-curl -fsSL https://gist.githubusercontent.com/Petri-Hub/GIST_ID/raw/install.sh | bash
+curl -fsSL https://gist.githubusercontent.com/Petri-Hub/b913bbe30f4c3b9affe88166509547f2/raw/install.sh | bash
 ```
 
 The script downloads the current `main` branch, copies the extension into your user extensions directory and adds it to `enabled-extensions`. Log out and back in afterwards. GNOME Shell 49 only discovers extension code at startup, so a running session will not show it. Re-run the same command to update.
