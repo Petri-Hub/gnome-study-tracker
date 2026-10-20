@@ -6,6 +6,7 @@
 
 <p align="center">
   <img alt="GNOME Shell 49" src="https://img.shields.io/badge/GNOME%20Shell-49-4A86CF?logo=gnome&logoColor=white" />
+  <a href="https://github.com/Petri-Hub/gnome-study-tracker/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Petri-Hub/gnome-study-tracker" /></a>
   <a href="LICENSE.md"><img alt="License" src="https://img.shields.io/github/license/Petri-Hub/gnome-study-tracker" /></a>
   <a href="https://github.com/Petri-Hub/gnome-study-tracker/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/Petri-Hub/gnome-study-tracker" /></a>
 </p>
@@ -19,6 +20,8 @@
 <p align="center">
   <img src="renders/popup.png" alt="Study Tracker open under the top bar, with sun and water on the left, the heatmap in the middle and the Pomodoro on the right" width="860" />
 </p>
+
+## Why it exists
 
 I wanted one place for the timer, the water I drank and the days I studied. A browser tab for each of those felt like too much, and the panel is always in sight. The extension is a personal tool, so it stays small and local. It has no account and makes no network requests.
 
@@ -41,7 +44,7 @@ Click the panel item to open the dashboard. It is a single dark surface with thi
 
 #### Sun and water
 
-Click the Sun row to switch today's sunlight on or off. The water tank is the large blue block. Scroll over it to log one step, 250 ml by default, and scroll the other way to correct a mistake. The level eases to the new amount, and a short hint appears only while the pointer is over the tank.
+Click the Sun row to switch today's sunlight on or off. The blue tank is the water control. Scroll over it to log one step, 250 ml by default, and scroll the other way to correct a mistake. The level eases to the new amount, and a short hint appears only while the pointer is over the tank.
 
 #### Heatmap
 
@@ -101,9 +104,15 @@ cd gnome-study-tracker
 
 Run `./install.sh` again after `git pull` to update the installed copy. Log out and back in after the first install.
 
-## Development
+## How it works
 
 The extension is plain GJS ESM. There is no bundler, no build step and no GSettings schema. `extension.js` creates `StudyTracker` from `src/app.js`, which owns the state, the panel item and the popup. `src/core` handles data and timers, `src/render` draws with Cairo, and `src/ui` builds the St widgets.
+
+Every change is written to `state.json`. A running timer stores its start time, so a shell restart can resume it. If a block expired while the shell was closed, the extension records the focus when it loads.
+
+## Development
+
+Run the tests from the repository root:
 
 ```sh
 npm test              # model and timer tests with node --test
