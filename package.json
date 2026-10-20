@@ -1,0 +1,12 @@
+{
+  "name": "gnome-study-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "GNOME Shell study tracker: sun, water, habits and Pomodoro",
+  "scripts": {
+    "test": "node --test tests/core.test.mjs",
+    "test:render": "gjs -m tests/render.test.mjs",
+    "test:e2e": "bash tests/e2e.sh"
+  }
+}

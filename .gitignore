@@ -1,0 +1,9 @@
+node_modules/
+renders/*
+!renders/popup.png
+!renders/popup-details.png
+!renders/popup-settings.png
+*.log
+
+__pycache__/
+*.pyc
