@@ -58,9 +58,10 @@ const columns = Array.from({length: WEEKS}, (_, col) =>
     Array.from({length: 7}, (_, row) => ({
         key: `${col}-${row}`,
         ms: 0,
-        level: (col * 3 + row * 5) % 5,
+        level: (col * 3 + row * 5) % 6,
         water: 0,
         sun: false,
+        walk: false,
         focus: 0,
         score: 0,
     })));

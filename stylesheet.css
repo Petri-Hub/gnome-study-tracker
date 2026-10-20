@@ -134,6 +134,10 @@
     background-color: #f5b544;
 }
 
+.study-score-dot.walk.on {
+    background-color: #8bd450;
+}
+
 .study-score-dot.focus.on {
     background-color: #f2555a;
 }
@@ -144,41 +148,49 @@
     color: rgba(255, 255, 255, 0.42);
 }
 
-/* ---------- sun ---------- */
+/* ---------- habits ---------- */
 
-.study-sun {
+.study-habit {
     padding: 2px 4px;
     border-radius: 5px;
 }
 
-.study-sun:hover {
+.study-habit:hover {
     background-color: rgba(255, 255, 255, 0.06);
 }
 
-.study-sun.on:hover {
-    background-color: rgba(245, 181, 68, 0.08);
-}
-
-.study-sun-icon {
+.study-habit-icon {
     color: rgba(255, 255, 255, 0.38);
 }
 
-.study-sun.on .study-sun-icon {
-    color: #f5b544;
-}
-
-.study-sun-label {
+.study-habit-label {
     font-size: 11px;
     font-weight: 600;
     color: #ededed;
 }
 
-.study-sun.on .study-sun-label {
+.study-habit-check {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.study-habit-sun.on .study-habit-icon,
+.study-habit-sun.on .study-habit-label,
+.study-habit-sun.on .study-habit-check {
     color: #f5b544;
 }
 
-.study-sun-check {
-    color: #f5b544;
+.study-habit-sun.on:hover {
+    background-color: rgba(245, 181, 68, 0.08);
+}
+
+.study-habit-walk.on .study-habit-icon,
+.study-habit-walk.on .study-habit-label,
+.study-habit-walk.on .study-habit-check {
+    color: #8bd450;
+}
+
+.study-habit-walk.on:hover {
+    background-color: rgba(139, 212, 80, 0.08);
 }
 
 /* ---------- water ---------- */

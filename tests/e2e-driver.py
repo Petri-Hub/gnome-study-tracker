@@ -93,6 +93,7 @@ def main():
               state["settings"]["waterStepMl"] == 250, state["settings"])
         check("sound volume starts at 60",
               state["settings"]["soundVolume"] == 60, state["settings"])
+        check("walk starts unchecked", state["day"]["walk"] is False, state["day"])
 
         bus.call_sync(DEST, PATH, IFACE, "AddWater",
                       int_arg(250), None, Gio.DBusCallFlags.NONE, 2000, None)
@@ -188,7 +189,13 @@ def main():
                       Gio.DBusCallFlags.NONE, 2000, None)
         state = snap(bus)
         check("water goal reached", state["day"]["water"] == 2000, state["day"]["water"])
-        check("perfect day is level 3", state["level"] == 3, state["level"])
+        check("three of four habits are level 3", state["level"] == 3, state["level"])
+
+        bus.call_sync(DEST, PATH, IFACE, "ToggleWalk", None, None,
+                      Gio.DBusCallFlags.NONE, 2000, None)
+        state = snap(bus)
+        check("walk toggles on", state["day"]["walk"] is True, state["day"])
+        check("all four habits are level 4", state["level"] == 4, state["level"])
 
         # Return to the idle focus clock for the preview screenshot.
         bus.call_sync(DEST, PATH, IFACE, "SetMode", GLib.Variant("(s)", ("focus",)),
@@ -283,8 +290,9 @@ def main():
             saved = json.load(handle)
         today = list(saved["days"].values())[-1]
         check("persisted water", today["water"] == 2000, today)
+        check("persisted walk", today["walk"] is True, today)
         check("persisted focus", today["focus"] == 1, today)
-        check("persisted state version", saved["version"] == 3, saved["version"])
+        check("persisted state version", saved["version"] == 4, saved["version"])
         check("persisted settings defaults",
               saved["settings"]["waterGoalMl"] == 2000
               and saved["settings"]["waterStepMl"] == 250

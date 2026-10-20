@@ -1,6 +1,6 @@
 import {idleTimer} from './timer.js';
 
-export const VERSION = 3;
+export const VERSION = 4;
 
 export const DEFAULT_SETTINGS = Object.freeze({
     focusMinutes: 90,
@@ -15,6 +15,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
 const DAY_DEFAULTS = Object.freeze({
     water: 0,
     sun: false,
+    walk: false,
     focus: 0,
     focusMinutes: 0,
 });
@@ -74,6 +75,10 @@ function normalizeDay(raw) {
     return {
         water: Math.max(0, Number(raw.water) || 0),
         sun: Boolean(raw.sun),
+        // Days saved before the walk habit existed keep null, so the new habit
+        // does not retroactively lower their heatmap colour.
+        walk: raw.walk === undefined || raw.walk === null
+            ? null : Boolean(raw.walk),
         focus: Math.max(0, Number(raw.focus) || 0),
         focusMinutes: Math.max(0, Number(raw.focusMinutes) || 0),
     };
@@ -178,6 +183,12 @@ export function toggleSun(state, ms) {
     return day.sun;
 }
 
+export function toggleWalk(state, ms) {
+    const day = ensureDay(state, ms);
+    day.walk = !day.walk;
+    return day.walk;
+}
+
 export function recordFocus(state, ms, minutes) {
     const day = ensureDay(state, ms);
     day.focus += 1;
@@ -185,7 +196,7 @@ export function recordFocus(state, ms, minutes) {
     return day;
 }
 
-/** Number of the three daily habits completed: water goal, sun, focus. */
+/** Number of the daily habits completed: water goal, sun, walk and focus. */
 export function dayScore(day, settings) {
     if (!day)
         return 0;
@@ -194,16 +205,23 @@ export function dayScore(day, settings) {
         done++;
     if (day.sun)
         done++;
+    if (day.walk)
+        done++;
     if ((day.focus ?? 0) >= 1)
         done++;
     return done;
 }
 
-/** GitHub-style intensity: 0..4, with a bonus level for 3 habits + 2+ focus blocks. */
+/**
+ * GitHub-style intensity: 0..5, with a bonus level when every habit tracked
+ * that day is done and there are at least two focus blocks. Days before the
+ * walk habit existed have walk === null and keep their old 0..4 scale.
+ */
 export function dayLevel(day, settings) {
     const done = dayScore(day, settings);
-    if (done === 3 && (day?.focus ?? 0) >= 2)
-        return 4;
+    const habits = day?.walk === null ? 3 : 4;
+    if (done === habits && (day?.focus ?? 0) >= 2)
+        return done + 1;
     return done;
 }
 
@@ -237,6 +255,7 @@ export function heatmapData(state, nowMs, weeks = 25) {
             level: dayLevel(day, state.settings),
             water: day?.water ?? 0,
             sun: Boolean(day?.sun),
+            walk: Boolean(day?.walk),
             focus: day?.focus ?? 0,
             score: dayScore(day, state.settings),
         });

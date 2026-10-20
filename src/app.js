@@ -13,6 +13,7 @@ import {
     prune,
     recordFocus,
     toggleSun,
+    toggleWalk,
 } from './core/state.js';
 import {
     idleTimer,
@@ -102,9 +103,17 @@ export class StudyTracker {
     }
 
     toggleSun() {
-        const before = Boolean(getDay(this._state, this.now())?.sun);
-        toggleSun(this._state, this.now());
-        const after = Boolean(getDay(this._state, this.now())?.sun);
+        this._toggleHabit('sun', toggleSun);
+    }
+
+    toggleWalk() {
+        this._toggleHabit('walk', toggleWalk);
+    }
+
+    _toggleHabit(key, toggle) {
+        const before = Boolean(getDay(this._state, this.now())?.[key]);
+        toggle(this._state, this.now());
+        const after = Boolean(getDay(this._state, this.now())?.[key]);
         if (after !== before)
             sound.play(after ? 'on' : 'off');
         this._afterChange();
@@ -299,7 +308,7 @@ export class StudyTracker {
     snapshot() {
         const now = this.now();
         const day = getDay(this._state, now) ?? {
-            water: 0, sun: false, focus: 0, focusMinutes: 0,
+            water: 0, sun: false, walk: false, focus: 0, focusMinutes: 0,
         };
         const timer = this._state.timers[this._state.viewMode];
         const active = this._activeTimer();

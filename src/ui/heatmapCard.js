@@ -87,6 +87,7 @@ export class HeatmapCard {
             shortDate(cell.ms),
             cell.water > 0 ? formatLiters(cell.water) : null,
             cell.sun ? 'sun' : null,
+            cell.walk ? 'walk' : null,
             cell.focus > 0 ? `${cell.focus}×` : null,
         ].filter(Boolean);
         this._caption.set_text(parts.join(' · '));

@@ -16,6 +16,7 @@ const XML = `
       <arg type="i" direction="in"/>
     </method>
     <method name="ToggleSun"/>
+    <method name="ToggleWalk"/>
     <method name="ToggleTimer"/>
     <method name="Start"/>
     <method name="Pause"/>
@@ -54,6 +55,7 @@ export function exportTestInterface(app) {
         Snapshot: () => JSON.stringify(app.snapshot()),
         AddWater: milliliters => app.addWater(milliliters),
         ToggleSun: () => app.toggleSun(),
+        ToggleWalk: () => app.toggleWalk(),
         ToggleTimer: () => app.toggleTimer(),
         Start: () => app.startTimer(),
         Pause: () => app.pauseTimer(),

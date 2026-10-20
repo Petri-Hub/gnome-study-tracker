@@ -12,6 +12,7 @@ import {
     recordFocus,
     streak,
     toggleSun,
+    toggleWalk,
     weekSeries,
 } from '../src/core/state.js';
 import {
@@ -108,22 +109,39 @@ test('formatting', () => {
     assert.equal(formatLiters(1250), '1.25 L');
 });
 
-test('water, sun and focus feed the daily score', () => {
+test('water, sun, walk and focus feed the daily score', () => {
     const state = createState();
     assert.equal(dayScore(state.days[dayKey(T0)], state.settings), 0);
 
     addWater(state, T0, 2500);
     assert.equal(dayScore(state.days[dayKey(T0)], state.settings), 1);
+    assert.equal(state.days[dayKey(T0)].walk, false);
 
     toggleSun(state, T0);
     assert.equal(dayScore(state.days[dayKey(T0)], state.settings), 2);
 
-    recordFocus(state, T0, 90);
+    toggleWalk(state, T0);
     assert.equal(dayScore(state.days[dayKey(T0)], state.settings), 3);
-    assert.equal(dayLevel(state.days[dayKey(T0)], state.settings), 3);
 
     recordFocus(state, T0, 90);
+    assert.equal(dayScore(state.days[dayKey(T0)], state.settings), 4);
     assert.equal(dayLevel(state.days[dayKey(T0)], state.settings), 4);
+
+    recordFocus(state, T0, 90);
+    assert.equal(dayLevel(state.days[dayKey(T0)], state.settings), 5);
+});
+
+test('legacy days keep their old heatmap scale without a walk field', () => {
+    const key = dayKey(T0);
+    const state = normalize({
+        version: 3,
+        days: {
+            [key]: {water: 2000, sun: true, focus: 2, focusMinutes: 180},
+        },
+    });
+    assert.equal(state.days[key].walk, null);
+    assert.equal(dayScore(state.days[key], state.settings), 3);
+    assert.equal(dayLevel(state.days[key], state.settings), 4);
 });
 
 test('adding water clamps at zero', () => {
@@ -155,6 +173,7 @@ test('heatmap returns full columns of 7 and ends today', () => {
         assert.equal(column.length, 7);
     const flat = data.columns.flat().filter(Boolean);
     assert.equal(flat.at(-1).key, dayKey(T0));
+    assert.equal(flat.at(-1).walk, false);
     assert.ok(data.labels.length >= 5);
 });
 
@@ -167,7 +186,7 @@ test('week series ends today with 7 entries', () => {
 
 test('state v2 migrates the old 30m break default', () => {
     const migrated = normalize({version: 2, settings: {breakMinutes: 30}});
-    assert.equal(migrated.version, 3);
+    assert.equal(migrated.version, 4);
     assert.equal(migrated.settings.breakMinutes, 20);
 
     const custom = normalize({version: 2, settings: {breakMinutes: 25}});
@@ -178,7 +197,7 @@ test('normalize repairs bad input and keeps unknown days out', () => {
     const state = normalize({
         settings: {focusMinutes: 0, breakMinutes: 999},
         days: {
-            [dayKey(T0)]: {water: 500, sun: 1, focus: 2, focusMinutes: 90},
+            [dayKey(T0)]: {water: 500, sun: 1, walk: 1, focus: 2, focusMinutes: 90},
             'not-a-day': {water: 1},
         },
         timer: {mode: 'break', status: 'running', startedAt: null},
@@ -186,13 +205,14 @@ test('normalize repairs bad input and keeps unknown days out', () => {
     assert.equal(state.settings.focusMinutes, 90);
     assert.equal(state.settings.breakMinutes, 180);
     assert.equal(state.days[dayKey(T0)].sun, true);
+    assert.equal(state.days[dayKey(T0)].walk, true);
     assert.equal(state.days['not-a-day'], undefined);
     assert.equal(state.timers.break.status, 'idle');
 });
 
 test('state v1 migrates the old 2.5 L default but keeps a custom goal', () => {
     const migrated = normalize({version: 1, settings: {waterGoalMl: 2500}});
-    assert.equal(migrated.version, 3);
+    assert.equal(migrated.version, 4);
     assert.equal(migrated.settings.waterGoalMl, 2000);
     assert.equal(migrated.settings.breakMinutes, 20);
 

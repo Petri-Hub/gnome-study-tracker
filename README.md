@@ -2,7 +2,7 @@
 
 <br>
 
-<h3 align="center">A GNOME Shell extension that keeps a study routine in the top bar.<br>Sunlight, water, focus blocks and a Pomodoro clock</h3>
+<h3 align="center">A GNOME Shell extension that keeps a study routine in the top bar.<br>Sunlight, walks, water, focus blocks and a Pomodoro clock</h3>
 
 <p align="center">
   <img alt="GNOME Shell 49" src="https://img.shields.io/badge/GNOME%20Shell-49-4A86CF?logo=gnome&logoColor=white" />
@@ -15,15 +15,15 @@
 
 ## About
 
-> **TL;DR:** Study Tracker puts the things I check during a study day in one small GNOME Shell popup. The top bar shows a tomato and the timer. The popup has sunlight, water, a 14-week heatmap and a 90/20 Pomodoro clock. Everything stays on the machine in a JSON file.
+> **TL;DR:** Study Tracker puts the things I check during a study day in one small GNOME Shell popup. The top bar shows a tomato and the timer. The popup has sunlight, a walk check, water, a 14-week heatmap and a 90/20 Pomodoro clock. Everything stays on the machine in a JSON file.
 
 <p align="center">
-  <img src="renders/popup.png" alt="Study Tracker open under the top bar, with sun and water on the left, the heatmap in the middle and the Pomodoro on the right" width="860" />
+  <img src="renders/popup.png" alt="Study Tracker open under the top bar, with sun, walk and water on the left, the heatmap in the middle and the Pomodoro on the right" width="860" />
 </p>
 
 ## Why it exists
 
-I wanted one place for the timer, the water I drank and the days I studied. A browser tab for each of those felt like too much, and the panel is always in sight. The extension is a personal tool, so it stays small and local. It has no account and makes no network requests.
+I wanted one place for the timer, the water I drank, the days I studied and whether I went outside for a walk. A browser tab for each of those felt like too much, and the panel is always in sight. The extension is a personal tool, so it stays small and local. It has no account and makes no network requests.
 
 ## What it does
 
@@ -42,13 +42,13 @@ The panel item sits on the left side of the top bar. A small tomato tells the st
 
 Click the panel item to open the dashboard. It is a single dark surface with thin rules between sections, matching the top bar instead of adding another window.
 
-#### Sun and water
+#### Sun, walk and water
 
-Click the Sun row to switch today's sunlight on or off. The blue tank is the water control. Scroll over it to log one step, 250 ml by default, and scroll the other way to correct a mistake. The level eases to the new amount, and a short hint appears only while the pointer is over the tank.
+Click the Sun row to switch today's sunlight on or off. The Walk row works the same way and records whether you went for a walk. The blue tank is the water control. Scroll over it to log one step, 250 ml by default, and scroll the other way to correct a mistake. The level eases to the new amount, and a short hint appears only while the pointer is over the tank.
 
 #### Heatmap
 
-The middle pane shows the last 14 weeks. Each cell is a day, coloured by the habits completed that day: the water goal, sunlight and at least one focus block. Completing all three plus a second focus block gives the brightest green. Hover a cell for its numbers, scroll or drag sideways to walk back through older weeks, and double-click to return to today.
+The middle pane shows the last 14 weeks. Each cell is a day, coloured by the habits completed that day: the water goal, sunlight, a walk and at least one focus block. Completing all four plus a second focus block gives the brightest green. Hover a cell for its numbers, scroll or drag sideways to walk back through older weeks, and double-click to return to today.
 
 #### Pomodoro
 
@@ -74,7 +74,7 @@ The chevron opens the current week's focus bars and today's focus count and minu
 ~/.local/share/gnome-study-tracker/state.json
 ```
 
-The file holds the daily water, sunlight and focus records, both timers and the settings. It is pruned to 400 days. Older state files are migrated when the extension loads, and a custom water goal or break length is kept.
+The file holds the daily water, sunlight, walk and focus records, both timers and the settings. It is pruned to 400 days. Older state files are migrated when the extension loads, and a custom water goal or break length is kept.
 
 ## Install
 
@@ -139,6 +139,7 @@ The test D-Bus methods are exported only when `STUDY_TRACKER_TEST=1`, so a norma
 │   ├── render          # Cairo drawings for the panel, water and charts
 │   ├── ui              # St widgets for each popup section
 │   └── sound.js        # sound playback
+├── icons               # bundled symbolic icons
 ├── sounds              # generated WAV feedback
 ├── tests               # core, render and E2E tests
 └── scripts             # screenshot and sound helpers

@@ -8,6 +8,7 @@ export const PALETTE = {
     water: '#38bdf8',
     waterDeep: '#0b6b9e',
     sun: '#f5b544',
+    walk: '#8bd450',
     grid: 'rgba(255,255,255,0.06)',
 };
 

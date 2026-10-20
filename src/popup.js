@@ -4,10 +4,10 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import {getDay} from './core/state.js';
 import {sound} from './sound.js';
+import {HabitCard} from './ui/habitCard.js';
 import {HeatmapCard} from './ui/heatmapCard.js';
 import {PomodoroCard} from './ui/pomodoroCard.js';
 import {SettingsView} from './ui/settingsView.js';
-import {SunCard} from './ui/sunCard.js';
 import {TodayCard} from './ui/todayCard.js';
 import {WaterCard} from './ui/waterCard.js';
 import {WeekCard} from './ui/weekCard.js';
@@ -19,7 +19,19 @@ export class Popup {
         this._detailsOpen = false;
         this._settingsOpen = false;
 
-        this._sun = new SunCard(() => app.toggleSun());
+        this._sun = new HabitCard({
+            key: 'sun',
+            text: 'Sun',
+            icon: 'weather-clear-symbolic',
+            onToggle: () => app.toggleSun(),
+        });
+        this._walk = new HabitCard({
+            key: 'walk',
+            text: 'Walk',
+            iconFile: 'study-walk-symbolic.svg',
+            iconOnFile: 'study-walk-on-symbolic.svg',
+            onToggle: () => app.toggleWalk(),
+        });
         this._water = new WaterCard({onAdd: milliliters => app.addWater(milliliters)});
         this._heatmap = new HeatmapCard();
         this._week = new WeekCard();
@@ -32,7 +44,7 @@ export class Popup {
 
         this._scoreDots = {};
         const dots = layout({spacing: 5, x_expand: true, y_align: Clutter.ActorAlign.CENTER});
-        for (const key of ['water', 'sun', 'focus']) {
+        for (const key of ['water', 'sun', 'walk', 'focus']) {
             const dot = new St.Widget({
                 style_class: `study-score-dot ${key}`,
                 y_align: Clutter.ActorAlign.CENTER,
@@ -112,6 +124,7 @@ export class Popup {
             style_class: 'study-pane-left',
         });
         left.add_child(this._sun.actor);
+        left.add_child(this._walk.actor);
         left.add_child(this._water.actor);
 
         this._heatmap.actor.add_style_class_name('study-pane-heatmap');
@@ -214,9 +227,11 @@ export class Popup {
 
         this._setDot('water', (day?.water ?? 0) >= settings.waterGoalMl);
         this._setDot('sun', Boolean(day?.sun));
+        this._setDot('walk', Boolean(day?.walk));
         this._setDot('focus', (day?.focus ?? 0) >= 1);
 
         this._sun.update(day);
+        this._walk.update(day);
         this._water.update(day, settings);
         this._heatmap.update(state, now);
         this._week.update(state, now);

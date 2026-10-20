@@ -12,6 +12,7 @@ const LEVEL_COLORS = [
     ['#006d32', 1],
     ['#26a641', 1],
     ['#39d353', 1],
+    ['#7ee787', 1],
 ];
 
 const STEP = HEATMAP_METRICS.cell + HEATMAP_METRICS.gap;
