@@ -116,7 +116,7 @@ Run the tests from the repository root:
 
 ```sh
 npm test              # model and timer tests with node --test
-npm run test:render   # golden PNGs in renders/, drawn with gjs
+npm run test:render   # widget renders in renders/, drawn with gjs
 npm run test:e2e      # private headless shell, driven over D-Bus
 ./scripts/preview.sh  # regenerate the popup screenshots
 ```
