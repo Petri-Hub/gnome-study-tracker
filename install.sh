@@ -34,6 +34,5 @@ PY
 
 echo "Installed to $DEST"
 echo
-echo "GNOME Shell 49 does not pick up a new extension while it is running."
-echo "Log out and back in, or preview it in a nested shell with:"
-echo "    ./dev.sh"
+echo "GNOME Shell 49 only discovers a new extension at startup."
+echo "Log out and back in to load it."
