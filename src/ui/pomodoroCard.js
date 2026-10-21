@@ -2,17 +2,13 @@ import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 
 import {formatClock} from '../core/format.js';
-import {progress, remainingMs} from '../core/timer.js';
-import {drawProgress} from '../render/progress.js';
-import {button, label, layout, paintArea} from './helpers.js';
+import {remainingMs} from '../core/timer.js';
+import {button, label, layout} from './helpers.js';
 
 const CYCLE_LENGTH = 4;
 
 export class PomodoroCard {
     constructor({onToggle, onReset, onMode}) {
-        this._fraction = 0;
-        this._color = '#f2555a';
-
         this._focusTab = this._buildTab('Focus', 'focus', () => onMode('focus'));
         this._breakTab = this._buildTab('Break', 'break', () => onMode('break'));
 
@@ -35,24 +31,13 @@ export class PomodoroCard {
         tabs.add_child(this._breakTab);
         tabs.add_child(layout({x_expand: true}));
 
-        const head = layout({vertical: true, spacing: 3, x_expand: true});
+        const head = layout({vertical: true, spacing: 8, x_expand: true});
         head.add_child(cycle);
         head.add_child(tabs);
 
         this._clock = label('1:30:00', 'study-clock', {
             x_expand: true,
             x_align: Clutter.ActorAlign.CENTER,
-        });
-
-        this._progressArea = new St.DrawingArea({
-            style_class: 'study-progress',
-            x_expand: false,
-            x_align: Clutter.ActorAlign.CENTER,
-        });
-        this._progressArea.connect('repaint', () => {
-            paintArea(this._progressArea, (cr, width, height) => {
-                drawProgress(cr, width, height, this._fraction, this._color);
-            });
         });
 
         this._primaryLabel = label('Start', 'study-primary-label');
@@ -77,7 +62,6 @@ export class PomodoroCard {
         });
         this.actor.add_child(head);
         this.actor.add_child(this._clock);
-        this.actor.add_child(this._progressArea);
         this.actor.add_child(controls);
     }
 
@@ -95,9 +79,6 @@ export class PomodoroCard {
         const isFocus = timer.mode === 'focus';
 
         this._clock.set_text(formatClock(remainingMs(timer, now)));
-        this._fraction = progress(timer, now);
-        this._color = isFocus ? '#f2555a' : '#46a758';
-        this._progressArea.queue_repaint();
 
         this._focusTab.set_style_class_name(
             `study-tab focus${isFocus ? ' active' : ''}`);

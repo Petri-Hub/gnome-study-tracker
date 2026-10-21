@@ -29,6 +29,9 @@ const XML = `
     </method>
     <method name="OpenMenu"/>
     <method name="CloseMenu"/>
+    <method name="SetTab">
+      <arg type="s" direction="in"/>
+    </method>
     <method name="ToggleDetails"/>
     <method name="ToggleSettings"/>
     <method name="AdjustSetting">
@@ -64,6 +67,7 @@ export function exportTestInterface(app) {
         Advance: seconds => app.advance(seconds),
         OpenMenu: () => app.openMenu(),
         CloseMenu: () => app.closeMenu(),
+        SetTab: tab => app.setTab(tab),
         ToggleDetails: () => app.toggleDetails(),
         ToggleSettings: () => app.toggleSettings(),
         AdjustSetting: (key, delta) => app.adjustSetting(key, delta),

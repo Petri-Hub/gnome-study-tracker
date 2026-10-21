@@ -4,20 +4,30 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import {getDay} from './core/state.js';
 import {sound} from './sound.js';
+import {DetailsView} from './ui/detailsView.js';
 import {HabitCard} from './ui/habitCard.js';
 import {HeatmapCard} from './ui/heatmapCard.js';
 import {PomodoroCard} from './ui/pomodoroCard.js';
 import {SettingsView} from './ui/settingsView.js';
-import {TodayCard} from './ui/todayCard.js';
+import {createTomatoIcon} from './ui/tomatoIcon.js';
 import {WaterCard} from './ui/waterCard.js';
-import {WeekCard} from './ui/weekCard.js';
-import {divider, layout} from './ui/helpers.js';
+import {DEFAULT_TAB, TABS, getTab, tabIndex} from './ui/tabs.js';
+import {divider, label, layout} from './ui/helpers.js';
+
+function animationsEnabled() {
+    try {
+        return St.Settings.get().enable_animations !== false;
+    } catch {
+        return true;
+    }
+}
 
 export class Popup {
     constructor(app) {
         this._app = app;
-        this._detailsOpen = false;
-        this._settingsOpen = false;
+        this._activeTab = null;
+        this._pages = {};
+        this._navButtons = {};
 
         this._sun = new HabitCard({
             key: 'sun',
@@ -34,8 +44,7 @@ export class Popup {
         });
         this._water = new WaterCard({onAdd: milliliters => app.addWater(milliliters)});
         this._heatmap = new HeatmapCard();
-        this._week = new WeekCard();
-        this._today = new TodayCard();
+        this._details = new DetailsView();
         this._pomodoro = new PomodoroCard({
             onToggle: () => app.toggleTimer(),
             onReset: () => app.resetTimer(),
@@ -43,7 +52,7 @@ export class Popup {
         });
 
         this._scoreDots = {};
-        const dots = layout({spacing: 5, x_expand: true, y_align: Clutter.ActorAlign.CENTER});
+        const dots = layout({spacing: 5, x_expand: false, y_align: Clutter.ActorAlign.CENTER});
         for (const key of ['water', 'sun', 'walk', 'focus']) {
             const dot = new St.Widget({
                 style_class: `study-score-dot ${key}`,
@@ -53,35 +62,15 @@ export class Popup {
             dots.add_child(dot);
         }
 
-        this._detailsIcon = new St.Icon({
-            icon_name: 'pan-down-symbolic',
-            icon_size: 11,
-        });
-        this._detailsButton = new St.Button({
-            style_class: 'study-icon-button',
-            can_focus: true,
-            child: this._detailsIcon,
-        });
-        this._detailsButton.connect('clicked', () => this.toggleDetails());
-
-        this._settingsButton = new St.Button({
-            style_class: 'study-icon-button',
-            can_focus: true,
-            child: new St.Icon({
-                icon_name: 'emblem-system-symbolic',
-                icon_size: 12,
-            }),
-        });
-        this._settingsButton.connect('clicked', () => this.toggleSettings());
-
+        this._nav = this._buildNav();
         const header = layout({
-            spacing: 6,
+            spacing: 8,
             x_expand: true,
             style_class: 'study-header',
         });
+        header.add_child(this._nav);
+        header.add_child(layout({x_expand: true}));
         header.add_child(dots);
-        header.add_child(this._detailsButton);
-        header.add_child(this._settingsButton);
 
         this.actor = layout({
             vertical: true,
@@ -91,29 +80,75 @@ export class Popup {
         this.actor.add_child(header);
         this.actor.add_child(divider(false));
 
-        this._main = this._buildMain();
-        this.actor.add_child(this._main);
-
-        this._details = this._buildDetails();
-        this._details.visible = false;
-        this.actor.add_child(this._details);
-
+        this._pages.today = this._buildMain();
+        this._pages.details = this._details.actor;
         this._settings = new SettingsView({
             onAdjust: (key, delta) => app.adjustSetting(key, delta),
             onToggle: key => app.toggleSetting(key),
             onReset: () => app.resetSettings(),
-            onDone: () => this.toggleSettings(),
+            onDone: () => this.setTab('today'),
         });
-        this._settings.actor.visible = false;
-        this.actor.add_child(this._settings.actor);
+        this._pages.settings = this._settings.actor;
+
+        this._pageHost = new St.Widget({
+            layout_manager: new Clutter.BinLayout(),
+            clip_to_allocation: true,
+            x_expand: true,
+            style_class: 'study-page-host',
+        });
+        for (const tab of TABS) {
+            const page = this._pages[tab.key];
+            page.visible = false;
+            page.x_expand = true;
+            page.y_expand = true;
+            this._pageHost.add_child(page);
+        }
+        this.actor.add_child(this._pageHost);
+        this.setTab(DEFAULT_TAB, false);
+    }
+
+    get tab() {
+        return this._activeTab ?? DEFAULT_TAB;
     }
 
     get detailsOpen() {
-        return this._detailsOpen;
+        return this.tab === 'details';
     }
 
     get settingsOpen() {
-        return this._settingsOpen;
+        return this.tab === 'settings';
+    }
+
+    _buildNav() {
+        const nav = layout({spacing: 2, x_expand: false, style_class: 'study-nav'});
+        for (const tab of TABS) {
+            const content = layout({spacing: 5, x_align: Clutter.ActorAlign.CENTER});
+            if (tab.key === 'today') {
+                this._navTomato = createTomatoIcon({
+                    size: 12,
+                    styleClass: 'study-nav-icon',
+                });
+                content.add_child(this._navTomato);
+            } else {
+                content.add_child(new St.Icon({
+                    icon_name: tab.icon,
+                    icon_size: 11,
+                    style_class: 'study-nav-icon',
+                }));
+            }
+            content.add_child(label(tab.label, 'study-nav-label'));
+
+            const button = new St.Button({
+                style_class: 'study-nav-tab',
+                can_focus: true,
+                accessible_name: tab.label,
+                child: content,
+            });
+            button.connect('clicked', () => this.setTab(tab.key));
+            this._navButtons[tab.key] = button;
+            nav.add_child(button);
+        }
+        return nav;
     }
 
     _buildMain() {
@@ -139,21 +174,6 @@ export class Popup {
         return row;
     }
 
-    _buildDetails() {
-        this._week.actor.add_style_class_name('study-pane-week');
-        this._today.actor.add_style_class_name('study-pane-today');
-
-        const row = layout({spacing: 0, x_expand: true});
-        row.add_child(this._week.actor);
-        row.add_child(divider(true));
-        row.add_child(this._today.actor);
-
-        const drawer = layout({vertical: true, spacing: 0, x_expand: true});
-        drawer.add_child(divider(false));
-        drawer.add_child(row);
-        return drawer;
-    }
-
     attach(menu) {
         menu.actor.add_style_class_name('study-popup');
         menu.setSourceAlignment(0.0);
@@ -169,56 +189,107 @@ export class Popup {
     onOpenChanged(open) {
         this._app.setPopupOpen(open);
         if (open) {
-            this.setDetailsOpen(false);
-            this.setSettingsOpen(false);
             this.update();
             this._water.startAnimation();
+            this._app.setActiveTab(this.tab);
         } else {
             this._water.stopAnimation();
         }
     }
 
-    toggleDetails() {
-        sound.play('click');
-        this.setDetailsOpen(!this._detailsOpen);
+    setTab(key, animate = true) {
+        const next = getTab(key);
+        if (next.key === this._activeTab) {
+            this._syncNav();
+            return;
+        }
+
+        const previousKey = this._activeTab;
+        const previousPage = previousKey ? this._pages[previousKey] : null;
+        const nextPage = this._pages[next.key];
+        const direction = previousKey
+            ? (tabIndex(next.key) >= tabIndex(previousKey) ? 1 : -1)
+            : 0;
+
+        this._activeTab = next.key;
+        this._syncNav();
+        this._app.setActiveTab(next.key);
+
+        if (next.key === 'settings')
+            this._settings.update(this._app.state.settings);
+
+        if (previousKey)
+            sound.play('click');
+
+        this._transition(previousPage, nextPage, direction, animate);
     }
 
-    setDetailsOpen(open) {
-        if (open && this._settingsOpen)
-            this.setSettingsOpen(false);
-        this._detailsOpen = open;
-        this._details.visible = open;
-        this._detailsIcon.set_icon_name(open ? 'pan-up-symbolic' : 'pan-down-symbolic');
-        this._detailsButton.set_style_class_name(
-            `study-icon-button${open ? ' on' : ''}`);
-        if (open)
-            this._reveal(this._details);
+    _syncNav() {
+        for (const tab of TABS) {
+            this._navButtons[tab.key].set_style_class_name(
+                `study-nav-tab${tab.key === this._activeTab ? ' active' : ''}`);
+        }
+        this._navTomato.opacity = this._activeTab === 'today' ? 255 : 150;
+    }
+
+    _transition(previousPage, nextPage, direction, animate) {
+        for (const page of Object.values(this._pages)) {
+            page.remove_all_transitions();
+            if (page !== previousPage && page !== nextPage) {
+                page.visible = false;
+                page.opacity = 255;
+                page.translation_x = 0;
+            }
+        }
+        this._pageHost.set_child_above_sibling(nextPage, null);
+
+        const shouldAnimate = animate && animationsEnabled();
+
+        if (!previousPage || !shouldAnimate || previousPage === nextPage) {
+            if (previousPage && previousPage !== nextPage) {
+                previousPage.visible = false;
+                previousPage.opacity = 255;
+                previousPage.translation_x = 0;
+            }
+            nextPage.visible = true;
+            nextPage.opacity = 255;
+            nextPage.translation_x = 0;
+            return;
+        }
+
+        nextPage.visible = true;
+        nextPage.opacity = 0;
+        nextPage.translation_x = direction * 18;
+        nextPage.ease({
+            opacity: 255,
+            translation_x: 0,
+            duration: 180,
+            mode: Clutter.AnimationMode.EASE_OUT_CUBIC,
+        });
+
+        previousPage.ease({
+            opacity: 0,
+            translation_x: -direction * 18,
+            duration: 140,
+            mode: Clutter.AnimationMode.EASE_IN_CUBIC,
+            onComplete: () => {
+                previousPage.visible = false;
+                previousPage.opacity = 255;
+                previousPage.translation_x = 0;
+            },
+        });
+    }
+
+    toggleTab(key) {
+        this.setTab(this.tab === key ? 'today' : key);
+    }
+
+    toggleDetails() {
+        this.toggleTab('details');
     }
 
     toggleSettings() {
-        sound.play('click');
-        this.setSettingsOpen(!this._settingsOpen);
-    }
-
-    setSettingsOpen(open) {
-        if (open && this._detailsOpen)
-            this.setDetailsOpen(false);
-
-        this._settingsOpen = open;
-        this._settings.actor.visible = open;
-        this._main.visible = !open;
-        this._detailsButton.visible = !open;
-        this._settingsButton.set_style_class_name(
-            `study-icon-button${open ? ' on' : ''}`);
-        if (open) {
-            this._settings.update(this._app.state.settings);
-            this._reveal(this._settings.actor);
-        }
-    }
-
-    _reveal(actor) {
-        actor.opacity = 0;
-        actor.ease({opacity: 255, duration: 140});
+        this.toggleTab('settings');
     }
 
     update(state = this._app.state, now = this._app.now()) {
@@ -234,8 +305,7 @@ export class Popup {
         this._walk.update(day);
         this._water.update(day, settings);
         this._heatmap.update(state, now);
-        this._week.update(state, now);
-        this._today.update(day);
+        this._details.update(state, now);
         this._pomodoro.update(state.timers[state.viewMode], now, day);
         this._settings.update(settings);
     }

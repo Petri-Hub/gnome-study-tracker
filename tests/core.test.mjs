@@ -9,16 +9,16 @@ import {
     dayScore,
     heatmapData,
     normalize,
+    rangeStats,
     recordFocus,
+    recentDays,
     streak,
     toggleSun,
     toggleWalk,
-    weekSeries,
 } from '../src/core/state.js';
 import {
     idleTimer,
     pause,
-    progress,
     remainingMs,
     reset,
     setMode,
@@ -95,14 +95,6 @@ test('timer: reset and mode switch use configured durations', () => {
     assert.equal(timer.remainingMs, 10 * MIN);
 });
 
-test('progress is 0 at start and 1 at the end', () => {
-    const state = createState();
-    const timer = start(state.timers.focus, T0, state.settings);
-    assert.equal(progress(timer, T0), 0);
-    assert.equal(progress(timer, T0 + 45 * MIN), 0.5);
-    assert.equal(progress(timer, T0 + 200 * MIN), 1);
-});
-
 test('formatting', () => {
     assert.equal(formatClock(90 * MIN), '1:30:00');
     assert.equal(formatClock(20 * MIN + 7000), '20:07');
@@ -177,11 +169,36 @@ test('heatmap returns full columns of 7 and ends today', () => {
     assert.ok(data.labels.length >= 5);
 });
 
-test('week series ends today with 7 entries', () => {
+test('recent days and range stats cover the trailing week', () => {
     const state = createState();
-    const series = weekSeries(state, T0);
-    assert.equal(series.length, 7);
-    assert.equal(series.at(-1).key, dayKey(T0));
+    const day = new Date(T0);
+    day.setDate(day.getDate() - 1);
+    const yesterday = day.getTime();
+    addWater(state, yesterday, 2000);
+    toggleSun(state, yesterday);
+    toggleWalk(state, yesterday);
+    recordFocus(state, yesterday, 90);
+
+    const days = recentDays(state, T0, 7);
+    assert.equal(days.length, 7);
+    assert.equal(days.at(-1).key, dayKey(T0));
+    assert.equal(days.at(-2).key, dayKey(yesterday));
+    assert.equal(days.at(-2).water, 2000);
+    assert.equal(days.at(-2).sun, true);
+    assert.equal(days.at(-2).walk, true);
+    assert.equal(days.at(-2).focusMinutes, 90);
+    assert.equal(days.at(-1).hasData, false);
+
+    const stats = rangeStats(state, T0, 7);
+    assert.equal(stats.days, 7);
+    assert.equal(stats.waterTotal, 2000);
+    assert.equal(stats.waterAverage, 2000 / 7);
+    assert.equal(stats.waterGoalDays, 1);
+    assert.equal(stats.sunDays, 1);
+    assert.equal(stats.walkDays, 1);
+    assert.equal(stats.focusBlocks, 1);
+    assert.equal(stats.focusMinutes, 90);
+    assert.equal(stats.activeDays, 1);
 });
 
 test('state v2 migrates the old 30m break default', () => {

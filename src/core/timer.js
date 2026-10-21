@@ -21,12 +21,6 @@ export function remainingMs(timer, now) {
     return Math.max(0, timer.remainingMs);
 }
 
-export function progress(timer, now) {
-    if (!timer.totalMs)
-        return 0;
-    return Math.min(1, Math.max(0, 1 - remainingMs(timer, now) / timer.totalMs));
-}
-
 /**
  * Start or resume. `startedAt` is back-dated so that the remaining time is
  * preserved across pauses and shell restarts.

@@ -65,6 +65,7 @@ export class SettingsView {
         const columns = layout({
             spacing: 14,
             x_expand: true,
+            y_expand: true,
             style_class: 'study-settings-body',
         });
         columns.add_child(water);

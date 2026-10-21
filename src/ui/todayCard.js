@@ -4,7 +4,7 @@ import St from 'gi://St';
 import {formatDurationWords} from '../core/format.js';
 import {divider, layout} from './helpers.js';
 
-function createStat(caption) {
+function createStat(caption, styleClass = '') {
     const value = new St.Label({
         text: '—',
         style_class: 'study-stat-value',
@@ -20,7 +20,7 @@ function createStat(caption) {
         spacing: 1,
         x_expand: true,
         y_align: Clutter.ActorAlign.CENTER,
-        style_class: 'study-stat',
+        style_class: `study-stat${styleClass ? ` ${styleClass}` : ''}`,
     });
     actor.add_child(value);
     actor.add_child(captionLabel);
@@ -30,7 +30,7 @@ function createStat(caption) {
 export class TodayCard {
     constructor() {
         this._focus = createStat('focus today');
-        this._minutes = createStat('minutes today');
+        this._minutes = createStat('minutes today', 'study-stat-right');
         const row = layout({x_expand: true, y_expand: true});
         row.add_child(this._focus.actor);
         row.add_child(divider(true));

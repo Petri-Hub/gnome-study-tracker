@@ -1,7 +1,7 @@
 {
   "uuid": "gnome-study-tracker@petri.local",
   "name": "Study Tracker",
-  "description": "Sun, walks, water and a Pomodoro clock in the top bar.",
+  "description": "Sun, walks, water, a Pomodoro clock and weekly details in the top bar.",
   "shell-version": ["49"],
-  "version": 2
+  "version": 3
 }

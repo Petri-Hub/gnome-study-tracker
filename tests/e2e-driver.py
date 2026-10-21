@@ -82,11 +82,18 @@ def main():
         wait_for_shell(bus)
 
         state = snap(bus)
-        check("panel starts at 90m", state["panel"]["label"] == "90m",
-              state["panel"]["label"])
+        check("panel starts on the Today tab", state["panel"]["tab"] == "today",
+              state["panel"])
+        check("panel starts at 90m", state["panel"]["timer"] == "90m",
+              state["panel"]["timer"])
         check("timer starts idle in focus mode",
               state["timer"]["status"] == "idle" and state["timer"]["mode"] == "focus")
         check("popup starts closed", state["popup"]["open"] is False)
+        check("popup starts on the Today tab",
+              state["popup"]["tab"] == "today"
+              and state["popup"]["details"] is False
+              and state["popup"]["settings"] is False,
+              state["popup"])
         check("water goal starts at 2 L", state["settings"]["waterGoalMl"] == 2000,
               state["settings"])
         check("water scroll starts at 250 ml",
@@ -116,8 +123,10 @@ def main():
               state["popup"]["width"])
         check("popup stays compact", 150 < state["popup"]["height"] < 280,
               state["popup"]["height"])
-        check("drawers start collapsed",
-              state["popup"]["details"] is False and state["popup"]["settings"] is False)
+        check("Today tab is active",
+              state["popup"]["tab"] == "today"
+              and state["popup"]["details"] is False
+              and state["popup"]["settings"] is False)
 
         bus.call_sync(DEST, PATH, IFACE, "Start", None, None,
                       Gio.DBusCallFlags.NONE, 2000, None)
@@ -128,8 +137,8 @@ def main():
         state = snap(bus)
         check("clock counts down", state["timer"]["remaining"] < 90 * 60 * 1000,
               state["timer"]["remaining"])
-        check("panel shows mm:ss while running", ":" in state["panel"]["label"],
-              state["panel"]["label"])
+        check("panel shows mm:ss while running", ":" in state["panel"]["timer"],
+              state["panel"]["timer"])
 
         call(bus, "SetMode", GLib.Variant("(s)", ("break",)))
         state = snap(bus)
@@ -181,8 +190,8 @@ def main():
         check("focus session is logged", state["day"]["focus"] == 1, state["day"])
         check("focus minutes are logged", state["day"]["focusMinutes"] == 90,
               state["day"]["focusMinutes"])
-        check("panel returns to 20m", state["panel"]["label"] == "20m",
-              state["panel"]["label"])
+        check("panel returns to 20m", state["panel"]["timer"] == "20m",
+              state["panel"]["timer"])
         check("level counts sun + focus", state["level"] == 2, state["level"])
 
         bus.call_sync(DEST, PATH, IFACE, "AddWater", int_arg(1750), None,
@@ -212,10 +221,18 @@ def main():
                       Gio.DBusCallFlags.NONE, 2000, None)
         time.sleep(0.4)
         details_state = snap(bus)
-        check("details drawer opens", details_state["popup"]["details"] is True)
+        check("details tab opens",
+              details_state["popup"]["tab"] == "details"
+              and details_state["popup"]["details"] is True)
+        check("panel follows the details tab",
+              details_state["panel"]["tab"] == "details",
+              details_state["panel"])
         details_height = details_state["popup"]["contentHeight"]
-        check("details drawer grows the popup",
-              details_height > compact_height + 40,
+        check("details tab has room for its charts",
+              150 < details_height < 320,
+              f"{compact_height} -> {details_height}")
+        check("details tab keeps the popup height stable",
+              abs(details_height - compact_height) <= 2,
               f"{compact_height} -> {details_height}")
         if shot:
             stem, ext = os.path.splitext(shot)
@@ -225,12 +242,20 @@ def main():
                       Gio.DBusCallFlags.NONE, 2000, None)
         time.sleep(0.4)
         settings_state = snap(bus)
-        check("settings page opens", settings_state["popup"]["settings"] is True)
-        check("settings page replaces the details drawer",
-              settings_state["popup"]["details"] is False)
+        check("settings tab opens", settings_state["popup"]["settings"] is True)
+        check("panel follows the settings tab",
+              settings_state["panel"]["tab"] == "settings",
+              settings_state["panel"])
+        check("settings tab replaces the details tab",
+              settings_state["popup"]["details"] is False
+              and settings_state["popup"]["tab"] == "settings")
+        settings_height = settings_state["popup"]["contentHeight"]
         check("settings page fits the compact popup",
-              80 < settings_state["popup"]["contentHeight"] < 300,
-              settings_state["popup"]["contentHeight"])
+              80 < settings_height < 300,
+              settings_height)
+        check("settings tab keeps the popup height stable",
+              abs(settings_height - compact_height) <= 2,
+              f"{compact_height} -> {settings_height}")
         if shot:
             stem, ext = os.path.splitext(shot)
             take_shot(bus, f"{stem}-settings{ext}")
@@ -249,8 +274,8 @@ def main():
               state["settings"]["focusMinutes"] == 85, state["settings"])
         check("focus duration updates the idle clock",
               state["timer"]["totalMs"] == 85 * 60 * 1000
-              and state["panel"]["label"] == "85m",
-              (state["timer"], state["panel"]["label"]))
+              and state["panel"]["timer"] == "85m",
+              (state["timer"], state["panel"]["timer"]))
         call(bus, "AdjustSetting", GLib.Variant("(si)", ("breakMinutes", 1)))
         state = snap(bus)
         check("settings adjust the break duration",
@@ -269,16 +294,26 @@ def main():
               and defaults["focusMinutes"] == 90
               and defaults["breakMinutes"] == 20
               and defaults["soundVolume"] == 60, defaults)
-        check("reset returns the clock to 90m", state["panel"]["label"] == "90m",
-              state["panel"]["label"])
+        check("reset returns the clock to 90m", state["panel"]["timer"] == "90m",
+              state["panel"]["timer"])
 
         bus.call_sync(DEST, PATH, IFACE, "ToggleSettings", None, None,
                       Gio.DBusCallFlags.NONE, 2000, None)
         time.sleep(0.4)
         state = snap(bus)
-        check("settings closes back to the dashboard",
-              state["popup"]["settings"] is False
+        check("settings closes back to the Today tab",
+              state["popup"]["tab"] == "today"
+              and state["popup"]["settings"] is False
               and state["popup"]["details"] is False)
+        check("panel returns to the Today tab",
+              state["panel"]["tab"] == "today", state["panel"])
+
+        call(bus, "SetTab", GLib.Variant("(s)", ("details",)))
+        state = snap(bus)
+        check("SetTab selects a tab directly", state["popup"]["tab"] == "details")
+        call(bus, "SetTab", GLib.Variant("(s)", ("today",)))
+        state = snap(bus)
+        check("SetTab returns to Today", state["popup"]["tab"] == "today")
 
         bus.call_sync(DEST, PATH, IFACE, "CloseMenu", None, None,
                       Gio.DBusCallFlags.NONE, 2000, None)

@@ -2,7 +2,7 @@
 
 <br>
 
-<h3 align="center">A GNOME Shell extension that keeps a study routine in the top bar.<br>Sunlight, walks, water, focus blocks and a Pomodoro clock</h3>
+<h3 align="center">A GNOME Shell extension that keeps a study routine in the top bar.<br>Sunlight, walks, water, focus blocks, weekly details and a Pomodoro clock</h3>
 
 <p align="center">
   <img alt="GNOME Shell 49" src="https://img.shields.io/badge/GNOME%20Shell-49-4A86CF?logo=gnome&logoColor=white" />
@@ -15,10 +15,10 @@
 
 ## About
 
-> **TL;DR:** Study Tracker puts the things I check during a study day in one small GNOME Shell popup. The top bar shows a tomato and the timer. The popup has sunlight, a walk check, water, a 14-week heatmap and a 90/20 Pomodoro clock. Everything stays on the machine in a JSON file.
+> **TL;DR:** Study Tracker puts the things I check during a study day in one small GNOME Shell popup. The top bar shows the tomato, the current tab and the timer. The popup has a Today dashboard, a Details view with weekly graphs, and settings, plus sunlight, a walk check, water, a 14-week heatmap and a 90/20 Pomodoro clock. Everything stays on the machine in a JSON file.
 
 <p align="center">
-  <img src="renders/popup.png" alt="Study Tracker open under the top bar, with sun, walk and water on the left, the heatmap in the middle and the Pomodoro on the right" width="860" />
+  <img src="renders/popup.png" alt="Study Tracker on the Today tab, with sun, walk and water on the left, the heatmap in the middle and the Pomodoro on the right" width="860" />
 </p>
 
 ## Why it exists
@@ -29,43 +29,53 @@ I wanted one place for the timer, the water I drank, the days I studied and whet
 
 ### The panel
 
-The panel item sits on the left side of the top bar. A small tomato tells the state, and the label shows either the configured duration or the remaining time.
+The panel item sits on the left side of the top bar, after the Activities button and any media controls. It keeps the tomato logo, then shows the name of the active tab and the timer, so the current screen and the remaining time are visible without opening the popup.
 
-| State | Mark | Label |
-| --- | --- | --- |
-| Idle | muted tomato | `90m` or `20m` |
-| Focus running | red tomato | `1:29:55` |
-| Break running | green tomato | `19:55` |
-| Paused | faded tomato and two pause bars | remaining time |
+| State | Timer |
+| --- | --- |
+| Idle | `90m` or `20m`, muted |
+| Focus running | `1:29:55`, red |
+| Break running | `19:55`, green |
+| Paused | remaining time, dimmed |
 
 ### Popup
 
 Click the panel item to open the dashboard. It is a single dark surface with thin rules between sections, matching the top bar instead of adding another window.
 
-#### Sun, walk and water
+The header has three tabs: **Today**, **Details** and **Settings**. The Today tab uses the tomato, while Details and Settings have their own icons. Switching tabs slides and fades the content, and the page height stays fixed so the popup does not jump. The active tab stays selected when the popup is closed and reopened.
+
+#### Today
+
+The first tab is the dashboard: sunlight, walk and water on the left, the 14-week heatmap in the middle and the Pomodoro clock on the right.
+
+##### Sun, walk and water
 
 Click the Sun row to switch today's sunlight on or off. The Walk row works the same way and records whether you went for a walk. The blue tank is the water control. Scroll over it to log one step, 250 ml by default, and scroll the other way to correct a mistake. The level eases to the new amount, and a short hint appears only while the pointer is over the tank.
 
-#### Heatmap
+##### Heatmap
 
 The middle pane shows the last 14 weeks. Each cell is a day, coloured by the habits completed that day: the water goal, sunlight, a walk and at least one focus block. Completing all four plus a second focus block gives the brightest green. Hover a cell for its numbers, scroll or drag sideways to walk back through older weeks, and double-click to return to today.
 
-#### Pomodoro
+##### Pomodoro
 
-Focus is 90 minutes by default and the break is 20. The tabs switch the timer you are looking at. A running focus block keeps going while the break tab is open, and starting a break pauses focus instead of resetting it. A focus block is logged only when the countdown reaches zero. Pausing or resetting before that gives no partial credit. The four dots above the tabs show progress through the current set of four focus blocks.
+Focus is 90 minutes by default and the break is 20. The Focus and Break buttons switch the timer you are looking at. A running focus block keeps going while the break view is open, and starting a break pauses focus instead of resetting it. A focus block is logged only when the countdown reaches zero. Pausing or resetting before that gives no partial credit. The four dots above the tabs show progress through the current set of four focus blocks.
 
 When a phase reaches zero, the popup switches to the next one, sends a notification and plays a chime. Auto-start is off by default; turn it on in settings to start the next phase immediately.
 
-### Details and settings
+#### Details
 
-The chevron opens the current week's focus bars and today's focus count and minutes. The gear opens settings for the water goal, water scroll step, focus and break lengths, auto-start, sound and volume. Reset returns every setting to its default; it does not delete the day history.
+The Details tab looks at the last seven days. Water has a bar chart with the daily goal as a dashed line. Habits shows sunlight and walks as two rows of daily squares, with the current streak underneath. Study shows the focus minutes for each day and the total number of focus blocks. The row at the bottom keeps today's focus count and minutes, separated from the charts by a thin rule.
 
 <p align="center">
-  <img src="renders/popup-details.png" alt="Study Tracker with the details drawer open, showing the week chart, focus count and focus minutes" width="860" />
+  <img src="renders/popup-details.png" alt="Study Tracker Details tab with water bars, a sun and walk grid, a focus chart and today's focus count and minutes" width="860" />
 </p>
 
+#### Settings
+
+The Settings tab opens the water goal, water scroll step, focus and break lengths, auto-start, sound and volume. Reset returns every setting to its default; it does not delete the day history.
+
 <p align="center">
-  <img src="renders/popup-settings.png" alt="Study Tracker settings, with water, Pomodoro, auto-start, sound and volume controls" width="560" />
+  <img src="renders/popup-settings.png" alt="Study Tracker Settings tab, with water, Pomodoro, auto-start, sound and volume controls" width="860" />
 </p>
 
 ### Where the data lives
@@ -106,7 +116,7 @@ Run `./install.sh` again after `git pull` to update the installed copy. Log out 
 
 ## How it works
 
-The extension is plain GJS ESM. There is no bundler, no build step and no GSettings schema. `extension.js` creates `StudyTracker` from `src/app.js`, which owns the state, the panel item and the popup. `src/core` handles data and timers, `src/render` draws with Cairo, and `src/ui` builds the St widgets.
+The extension is plain GJS ESM. There is no bundler, no build step and no GSettings schema. `extension.js` creates `StudyTracker` from `src/app.js`, which owns the state, the panel item and the tabbed popup. `src/core` handles data and timers, `src/render` draws the water and charts with Cairo, and `src/ui` builds the St widgets.
 
 Every change is written to `state.json`. A running timer stores its start time, so a shell restart can resume it. If a block expired while the shell was closed, the extension records the focus when it loads.
 
@@ -136,7 +146,7 @@ The test D-Bus methods are exported only when `STUDY_TRACKER_TEST=1`, so a norma
 │   ├── panel.js        # top-bar item
 │   ├── popup.js        # dashboard, details and settings
 │   ├── core            # state, timers and formatting
-│   ├── render          # Cairo drawings for the panel, water and charts
+│   ├── render          # Cairo drawings for water and the charts
 │   ├── ui              # St widgets for each popup section
 │   └── sound.js        # sound playback
 ├── icons               # bundled symbolic icons

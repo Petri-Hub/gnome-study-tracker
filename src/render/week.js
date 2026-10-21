@@ -10,6 +10,9 @@ export function drawWeek(cr, width, height, series, {
     todayKey = null,
     labelHeight = 14,
 } = {}) {
+    if (!series.length)
+        return;
+
     const gap = 8;
     const barWidth = (width - gap * (series.length - 1)) / series.length;
     const chartHeight = height - labelHeight;

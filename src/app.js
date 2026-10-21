@@ -268,6 +268,14 @@ export class StudyTracker {
             this._state.timers[mode].status === 'running');
     }
 
+    setActiveTab(tab) {
+        this._panel?.setTab(tab);
+    }
+
+    setTab(tab) {
+        this._popup.setTab(tab);
+    }
+
     toggleDetails() {
         this._popup.toggleDetails();
     }
@@ -315,12 +323,19 @@ export class StudyTracker {
         const menu = this._panel.button.menu.actor;
         return {
             now,
-            panel: {label: this._panel.text, status: active.status},
+            panel: {
+                label: this._panel.text,
+                tab: this._panel.tab,
+                tabLabel: this._panel.tabText,
+                timer: this._panel.timerText,
+                status: active.status,
+            },
             popup: {
                 open: this._popupOpen,
                 width: menu.width,
                 height: menu.height,
                 contentHeight: this._popup.actor.height,
+                tab: this._popup.tab,
                 details: this._popup.detailsOpen,
                 settings: this._popup.settingsOpen,
             },

@@ -1,7 +1,7 @@
 /* ---------- panel ---------- */
 
 .study-panel {
-    padding: 0 6px;
+    padding: 0 8px;
     background-color: transparent;
     border: none;
     box-shadow: none;
@@ -15,20 +15,34 @@
     background-color: transparent;
 }
 
-.study-panel-label {
-    font-family: "JetBrains Mono";
-    font-size: 12px;
+.study-panel-tab {
+    font-size: 11px;
     font-weight: 600;
     color: #f4f4f5;
 }
 
-.study-panel-label.paused {
-    color: rgba(244, 244, 245, 0.5);
+.study-panel-separator {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.24);
 }
 
-.study-panel-dot {
-    min-width: 24px;
-    min-height: 14px;
+.study-panel-timer {
+    font-family: "JetBrains Mono";
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(244, 244, 245, 0.72);
+}
+
+.study-panel-timer.focus.running {
+    color: #f2555a;
+}
+
+.study-panel-timer.break.running {
+    color: #46a758;
+}
+
+.study-panel-timer.paused {
+    color: rgba(244, 244, 245, 0.4);
 }
 
 /* ---------- popup shell ---------- */
@@ -43,6 +57,7 @@
 }
 
 .study-popup .popup-menu-content {
+    min-width: 576px;
     background-color: #131313;
     border: none;
     border-radius: 8px;
@@ -58,7 +73,43 @@
 }
 
 .study-header {
-    padding: 8px 12px 7px;
+    padding: 6px 10px 6px 12px;
+}
+
+.study-page-host {
+    min-height: 183px;
+}
+
+.study-nav-tab {
+    padding: 3px 7px;
+    border-radius: 6px;
+}
+
+.study-nav-tab:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.study-nav-tab:active {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.study-nav-tab.active {
+    background-color: rgba(255, 255, 255, 0.085);
+}
+
+.study-nav-icon {
+    color: rgba(255, 255, 255, 0.42);
+}
+
+.study-nav-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.42);
+}
+
+.study-nav-tab.active .study-nav-icon,
+.study-nav-tab.active .study-nav-label {
+    color: #ffffff;
 }
 
 .study-pane-left {
@@ -73,16 +124,12 @@
     padding: 8px 12px 8px 10px;
 }
 
-.study-pane-week {
-    padding: 8px 10px 8px 12px;
-}
-
-.study-pane-today {
-    padding: 0 12px 0 10px;
-}
-
 .study-stat {
     padding: 8px 0;
+}
+
+.study-stat-right {
+    padding-left: 10px;
 }
 
 /* ---------- shared ---------- */
@@ -204,13 +251,73 @@
 
 .study-heatmap {
     min-width: 207px;
-    min-height: 122px;
+    min-height: 128px;
 }
 
-/* ---------- week chart ---------- */
+/* ---------- details ---------- */
 
-.study-week {
-    min-height: 40px;
+.study-details {
+    padding: 0;
+}
+
+.study-details-columns {
+    padding: 0 2px;
+}
+
+.study-details-column {
+    padding: 8px;
+}
+
+.study-details-column.first {
+    padding-left: 12px;
+}
+
+.study-details-column.last {
+    padding-right: 12px;
+}
+
+.study-details-heading {
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: rgba(255, 255, 255, 0.36);
+}
+
+.study-details-value {
+    font-family: "JetBrains Mono";
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.study-details-caption {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.study-details-foot {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.42);
+}
+
+.study-details-mini-value {
+    font-family: "JetBrains Mono";
+    font-size: 12px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.study-details-mini-label {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.42);
+}
+
+.study-details-chart {
+    min-width: 0;
+}
+
+.study-details-today {
+    padding: 0 12px 2px;
 }
 
 /* ---------- today stats ---------- */
@@ -230,7 +337,7 @@
 /* ---------- pomodoro ---------- */
 
 .study-pomodoro {
-    min-width: 168px;
+    min-width: 160px;
 }
 
 .study-tab {
@@ -261,11 +368,6 @@
     font-size: 28px;
     font-weight: 700;
     color: #ffffff;
-}
-
-.study-progress {
-    min-width: 96px;
-    min-height: 2px;
 }
 
 .study-cycle-dot {

@@ -22,6 +22,7 @@ const DAY_DEFAULTS = Object.freeze({
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
@@ -302,21 +303,54 @@ export function streak(state, nowMs) {
     return count;
 }
 
-/** Focus minutes for the last seven days, oldest first. */
-export function weekSeries(state, nowMs) {
-    const cursor = new Date(nowMs);
+/** Daily records for a trailing window, oldest first. */
+export function recentDays(state, nowMs, days = 7) {
+    const end = new Date(nowMs);
     const out = [];
-    for (let i = 6; i >= 0; i--) {
-        const d = new Date(cursor);
-        d.setDate(d.getDate() - i);
-        const key = dayKey(d.getTime());
+    for (let i = days - 1; i >= 0; i--) {
+        const date = new Date(end);
+        date.setDate(date.getDate() - i);
+        const key = dayKey(date.getTime());
+        const day = state.days[key];
+        const minutes = day?.focusMinutes ?? 0;
         out.push({
             key,
-            label: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()],
-            minutes: state.days[key]?.focusMinutes ?? 0,
+            ms: date.getTime(),
+            label: WEEKDAYS[date.getDay()],
+            initial: WEEKDAYS[date.getDay()][0],
+            hasData: Boolean(day),
+            water: day?.water ?? 0,
+            sun: Boolean(day?.sun),
+            walk: Boolean(day?.walk),
+            focus: day?.focus ?? 0,
+            focusMinutes: minutes,
+            minutes,
         });
     }
     return out;
+}
+
+/**
+ * Aggregate the trailing window used by the details tab. Missing days count as
+ * zero so an empty day still lowers the weekly average.
+ */
+export function rangeStats(state, nowMs, days = 7) {
+    const series = recentDays(state, nowMs, days);
+    const totalWater = series.reduce((sum, day) => sum + day.water, 0);
+    const focusMinutes = series.reduce((sum, day) => sum + day.focusMinutes, 0);
+    return {
+        days,
+        series,
+        waterTotal: totalWater,
+        waterAverage: totalWater / days,
+        waterGoalDays: series.filter(day => day.water >= state.settings.waterGoalMl).length,
+        sunDays: series.filter(day => day.sun).length,
+        walkDays: series.filter(day => day.walk).length,
+        focusBlocks: series.reduce((sum, day) => sum + day.focus, 0),
+        focusMinutes,
+        focusAverage: focusMinutes / days,
+        activeDays: series.filter(day => day.hasData).length,
+    };
 }
 
 export function prune(state, nowMs, keepDays = 400) {

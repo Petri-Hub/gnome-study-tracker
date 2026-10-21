@@ -5,8 +5,10 @@ import GLib from 'gi://GLib';
 
 import {drawWater} from '../src/render/water.js';
 import {drawHeatmap, heatmapSize} from '../src/render/heatmap.js';
-import {drawStatus} from '../src/render/dot.js';
-import {drawProgress} from '../src/render/progress.js';
+import {drawHabits} from '../src/render/habits.js';
+import {drawTomato} from '../src/render/tomato.js';
+import {drawWaterWeek} from '../src/render/waterWeek.js';
+import {drawWeek} from '../src/render/week.js';
 
 const SCALE = 2;
 const OUT = GLib.build_filenamev([GLib.get_current_dir(), 'renders']);
@@ -74,16 +76,25 @@ render('heatmap', size.width, size.height, (cr, w, h) => {
     });
 });
 
-render('status', 26, 14, (cr, w, h) => {
-    drawStatus(cr, w, h, {mode: 'focus', status: 'running'});
-});
-render('status-paused', 26, 14, (cr, w, h) => {
-    drawStatus(cr, w, h, {mode: 'focus', status: 'paused'});
-});
-render('status-break', 26, 14, (cr, w, h) => {
-    drawStatus(cr, w, h, {mode: 'break', status: 'running'});
-});
+const DETAILS = [
+    {key: 'mon', label: 'Mon', initial: 'M', water: 1500, sun: true, walk: true, minutes: 90},
+    {key: 'tue', label: 'Tue', initial: 'T', water: 2000, sun: true, walk: false, minutes: 0},
+    {key: 'wed', label: 'Wed', initial: 'W', water: 750, sun: false, walk: true, minutes: 180},
+    {key: 'thu', label: 'Thu', initial: 'T', water: 2500, sun: true, walk: true, minutes: 90},
+    {key: 'fri', label: 'Fri', initial: 'F', water: 1000, sun: false, walk: false, minutes: 0},
+    {key: 'sat', label: 'Sat', initial: 'S', water: 2000, sun: true, walk: true, minutes: 90},
+    {key: 'sun', label: 'Sun', initial: 'S', water: 1750, sun: true, walk: true, minutes: 180},
+];
 
-render('progress', 240, 6, (cr, w, h) => {
-    drawProgress(cr, w, h, 0.62, '#f2555a');
+render('tomato', 14, 14, (cr, w, h) => {
+    drawTomato(cr, w, h);
+});
+render('water-week', 160, 58, (cr, w, h) => {
+    drawWaterWeek(cr, w, h, DETAILS, {goal: 2000, todayKey: 'sun'});
+});
+render('habit-week', 160, 38, (cr, w, h) => {
+    drawHabits(cr, w, h, DETAILS, {todayKey: 'sun'});
+});
+render('study-week', 160, 58, (cr, w, h) => {
+    drawWeek(cr, w, h, DETAILS, {accent: '#f2555a', todayKey: 'sun'});
 });
