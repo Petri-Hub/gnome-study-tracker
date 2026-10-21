@@ -86,6 +86,10 @@ def main():
               state["panel"])
         check("panel starts at 90m", state["panel"]["timer"] == "90m",
               state["panel"]["timer"])
+        check("panel sits on the left side", state["panel"]["box"] == "left",
+              state["panel"])
+        check("panel sits after the Activities button",
+              state["panel"]["index"] == 1, state["panel"])
         check("timer starts idle in focus mode",
               state["timer"]["status"] == "idle" and state["timer"]["mode"] == "focus")
         check("popup starts closed", state["popup"]["open"] is False)

@@ -29,7 +29,7 @@ I wanted one place for the timer, the water I drank, the days I studied and whet
 
 ### The panel
 
-The panel item sits on the left side of the top bar, after the Activities button and any media controls. It keeps the tomato logo, then shows the name of the active tab and the timer, so the current screen and the remaining time are visible without opening the popup.
+The panel item sits on the left side of the top bar, after the Activities button and before any media controls. It keeps the tomato logo, then shows the name of the active tab and the timer, so the current screen and the remaining time are visible without opening the popup.
 
 | State | Timer |
 | --- | --- |

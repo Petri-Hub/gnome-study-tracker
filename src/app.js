@@ -329,6 +329,8 @@ export class StudyTracker {
                 tabLabel: this._panel.tabText,
                 timer: this._panel.timerText,
                 status: active.status,
+                box: this._panel.box,
+                index: this._panel.index,
             },
             popup: {
                 open: this._popupOpen,
