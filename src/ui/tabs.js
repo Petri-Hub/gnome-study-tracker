@@ -1,6 +1,7 @@
 export const TABS = Object.freeze([
     {key: 'today', label: 'Today', icon: null},
     {key: 'details', label: 'Details', icon: 'view-list-symbolic'},
+    {key: 'history', label: 'History', icon: 'x-office-calendar-symbolic'},
     {key: 'settings', label: 'Settings', icon: 'emblem-system-symbolic'},
 ]);
 

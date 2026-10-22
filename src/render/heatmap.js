@@ -8,14 +8,60 @@ export const HEATMAP_METRICS = Object.freeze({
 
 const LEVEL_COLORS = [
     ['#ffffff', 0.06],
-    ['#0e4429', 1],
-    ['#006d32', 1],
-    ['#26a641', 1],
-    ['#39d353', 1],
-    ['#7ee787', 1],
+    ['#123f25', 1],
+    ['#166534', 1],
+    ['#22c55e', 1],
+    ['#4ade80', 1],
+    ['#86efac', 1],
+];
+
+const INTENSITY_STOPS = [
+    {at: 0, rgb: [18, 63, 37]},
+    {at: 0.35, rgb: [22, 101, 52]},
+    {at: 0.7, rgb: [34, 197, 94]},
+    {at: 1, rgb: [134, 239, 172]},
 ];
 
 const STEP = HEATMAP_METRICS.cell + HEATMAP_METRICS.gap;
+
+function mix(start, end, amount) {
+    return start + (end - start) * amount;
+}
+
+function intensityColor(value) {
+    const target = Math.min(1, Math.max(0.12, value));
+    let left = INTENSITY_STOPS[0];
+    let right = INTENSITY_STOPS[INTENSITY_STOPS.length - 1];
+    for (let i = 0; i < INTENSITY_STOPS.length - 1; i++) {
+        if (target <= INTENSITY_STOPS[i + 1].at) {
+            left = INTENSITY_STOPS[i];
+            right = INTENSITY_STOPS[i + 1];
+            break;
+        }
+    }
+    const span = right.at - left.at || 1;
+    const local = (target - left.at) / span;
+    return [
+        mix(left.rgb[0], right.rgb[0], local) / 255,
+        mix(left.rgb[1], right.rgb[1], local) / 255,
+        mix(left.rgb[2], right.rgb[2], local) / 255,
+    ];
+}
+
+function cellColor(cell) {
+    if (Number.isFinite(cell.intensity)) {
+        if (cell.intensity <= 0)
+            return [1, 1, 1, 0.06];
+        return [...intensityColor(cell.intensity), 1];
+    }
+    const [color, alpha] = LEVEL_COLORS[cell.level] ?? LEVEL_COLORS[0];
+    return [
+        parseInt(color.slice(1, 3), 16) / 255,
+        parseInt(color.slice(3, 5), 16) / 255,
+        parseInt(color.slice(5, 7), 16) / 255,
+        alpha,
+    ];
+}
 
 export function heatmapSize(weeks, metrics = HEATMAP_METRICS) {
     return {
@@ -68,13 +114,9 @@ export function drawHeatmap(cr, {
                 return;
             const x = col * step;
             const y = top + row * step;
-            const [color, alpha] = LEVEL_COLORS[cell.level] ?? LEVEL_COLORS[0];
             roundedRect(cr, x, y, metrics.cell, metrics.cell, 3);
-            cr.setSourceRGBA(
-                parseInt(color.slice(1, 3), 16) / 255,
-                parseInt(color.slice(3, 5), 16) / 255,
-                parseInt(color.slice(5, 7), 16) / 255,
-                alpha);
+            const [red, green, blue, alpha] = cellColor(cell);
+            cr.setSourceRGBA(red, green, blue, alpha);
             cr.fill();
 
             if (todayKey && cell.key === todayKey) {

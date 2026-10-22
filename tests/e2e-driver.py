@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Driver for tests/e2e.sh. Runs inside a private D-Bus session."""
+import datetime
 import json
 import os
 import re
@@ -16,6 +17,8 @@ IFACE = "org.gnome.Shell.Extensions.StudyTracker"
 STATE = os.path.join(
     os.environ["XDG_DATA_HOME"], "gnome-study-tracker", "state.json")
 LOG = os.environ["STUDY_TRACKER_LOG"]
+TODAY = datetime.date.today().isoformat()
+YESTERDAY = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
 
 failures = []
 
@@ -96,6 +99,7 @@ def main():
         check("popup starts on the Today tab",
               state["popup"]["tab"] == "today"
               and state["popup"]["details"] is False
+              and state["popup"]["history"] is False
               and state["popup"]["settings"] is False,
               state["popup"])
         check("water goal starts at 2 L", state["settings"]["waterGoalMl"] == 2000,
@@ -319,6 +323,64 @@ def main():
         state = snap(bus)
         check("SetTab returns to Today", state["popup"]["tab"] == "today")
 
+        call(bus, "SetTab", GLib.Variant("(s)", ("history",)))
+        time.sleep(0.4)
+        history_state = snap(bus)
+        check("history tab opens",
+              history_state["popup"]["tab"] == "history"
+              and history_state["popup"]["history"] is True
+              and history_state["popup"]["details"] is False
+              and history_state["popup"]["settings"] is False,
+              history_state["popup"])
+        check("panel follows the history tab",
+              history_state["panel"]["tab"] == "history",
+              history_state["panel"])
+        check("history opens on yesterday",
+              history_state["history"]["selectedKey"] == YESTERDAY,
+              history_state["history"])
+        history_height = history_state["popup"]["contentHeight"]
+        check("history tab keeps the popup height stable",
+              abs(history_height - compact_height) <= 2,
+              f"{compact_height} -> {history_height}")
+        if shot:
+            stem, ext = os.path.splitext(shot)
+            take_shot(bus, f"{stem}-history{ext}")
+
+        call(bus, "SelectDay", GLib.Variant("(s)", (YESTERDAY,)))
+        history_state = snap(bus)
+        check("SelectDay selects a past day",
+              history_state["history"]["selectedKey"] == YESTERDAY,
+              history_state["history"])
+
+        before_water = history_state["history"]["day"]["water"]
+        before_sun = bool(history_state["history"]["day"]["sun"])
+        before_walk = bool(history_state["history"]["day"]["walk"])
+        call(bus, "AddDayWater",
+             GLib.Variant("(si)", (YESTERDAY, 750)))
+        call(bus, "ToggleDayHabit",
+             GLib.Variant("(ss)", (YESTERDAY, "sun")))
+        call(bus, "ToggleDayHabit",
+             GLib.Variant("(ss)", (YESTERDAY, "walk")))
+        history_state = snap(bus)
+        expected_water = min(20000, before_water + 750)
+        expected_sun = not before_sun
+        expected_walk = not before_walk
+        check("history water adjusts",
+              history_state["history"]["day"]["water"] == expected_water,
+              (before_water, history_state["history"]["day"]["water"]))
+        check("history sun toggles",
+              bool(history_state["history"]["day"]["sun"]) == expected_sun,
+              history_state["history"]["day"])
+        check("history walk toggles",
+              bool(history_state["history"]["day"]["walk"]) == expected_walk,
+              history_state["history"]["day"])
+
+        call(bus, "SetTab", GLib.Variant("(s)", ("today",)))
+        state = snap(bus)
+        check("history returns to Today",
+              state["popup"]["tab"] == "today"
+              and state["panel"]["tab"] == "today")
+
         bus.call_sync(DEST, PATH, IFACE, "CloseMenu", None, None,
                       Gio.DBusCallFlags.NONE, 2000, None)
         time.sleep(0.4)
@@ -327,10 +389,18 @@ def main():
 
         with open(STATE) as handle:
             saved = json.load(handle)
-        today = list(saved["days"].values())[-1]
+        today = saved["days"][TODAY]
         check("persisted water", today["water"] == 2000, today)
         check("persisted walk", today["walk"] is True, today)
         check("persisted focus", today["focus"] == 1, today)
+
+        saved_history = saved["days"][YESTERDAY]
+        check("persisted history water",
+              saved_history["water"] == expected_water, saved_history)
+        check("persisted history sun",
+              saved_history["sun"] is expected_sun, saved_history)
+        check("persisted history walk",
+              saved_history["walk"] is expected_walk, saved_history)
         check("persisted state version", saved["version"] == 4, saved["version"])
         check("persisted settings defaults",
               saved["settings"]["waterGoalMl"] == 2000

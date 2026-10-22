@@ -5,7 +5,9 @@ import Shell from 'gi://Shell';
 import {
     addWater,
     createState,
+    dayKey,
     dayLevel,
+    dayMs,
     dayScore,
     DEFAULT_SETTINGS,
     getDay,
@@ -94,29 +96,42 @@ export class StudyTracker {
     }
 
     addWater(milliliters) {
-        const before = getDay(this._state, this.now())?.water ?? 0;
-        addWater(this._state, this.now(), milliliters);
-        const after = getDay(this._state, this.now())?.water ?? 0;
+        this.addWaterForDay(this.now(), milliliters);
+    }
+
+    addWaterForDay(ms, milliliters) {
+        if (!this._isEditableDay(ms))
+            return;
+        const before = getDay(this._state, ms)?.water ?? 0;
+        addWater(this._state, ms, milliliters);
+        const after = getDay(this._state, ms)?.water ?? 0;
         if (after !== before)
             sound.play('water');
         this._afterChange();
     }
 
     toggleSun() {
-        this._toggleHabit('sun', toggleSun);
+        this.toggleDayHabit(this.now(), 'sun');
     }
 
     toggleWalk() {
-        this._toggleHabit('walk', toggleWalk);
+        this.toggleDayHabit(this.now(), 'walk');
     }
 
-    _toggleHabit(key, toggle) {
-        const before = Boolean(getDay(this._state, this.now())?.[key]);
-        toggle(this._state, this.now());
-        const after = Boolean(getDay(this._state, this.now())?.[key]);
+    toggleDayHabit(ms, key) {
+        const toggle = key === 'sun' ? toggleSun : key === 'walk' ? toggleWalk : null;
+        if (!toggle || !this._isEditableDay(ms))
+            return;
+        const before = Boolean(getDay(this._state, ms)?.[key]);
+        toggle(this._state, ms);
+        const after = Boolean(getDay(this._state, ms)?.[key]);
         if (after !== before)
             sound.play(after ? 'on' : 'off');
         this._afterChange();
+    }
+
+    _isEditableDay(ms) {
+        return Number.isFinite(ms) && dayKey(ms) <= dayKey(this.now());
     }
 
     toggleTimer() {
@@ -284,6 +299,14 @@ export class StudyTracker {
         this._popup.toggleSettings();
     }
 
+    toggleHistory() {
+        this._popup.toggleHistory();
+    }
+
+    selectHistoryDay(key) {
+        this._popup.selectHistoryDay(key);
+    }
+
     openMenu() {
         if (!this._panel.button.menu.isOpen)
             this._panel.button.menu.open();
@@ -321,6 +344,9 @@ export class StudyTracker {
         const timer = this._state.timers[this._state.viewMode];
         const active = this._activeTimer();
         const menu = this._panel.button.menu.actor;
+        const historyKey = this._popup.historySelectedKey;
+        const historyMs = historyKey === null ? null : dayMs(historyKey);
+        const historyDay = historyMs === null ? null : getDay(this._state, historyMs);
         return {
             now,
             panel: {
@@ -339,7 +365,16 @@ export class StudyTracker {
                 contentHeight: this._popup.actor.height,
                 tab: this._popup.tab,
                 details: this._popup.detailsOpen,
+                history: this._popup.historyOpen,
                 settings: this._popup.settingsOpen,
+            },
+            history: {
+                open: this._popup.historyOpen,
+                selectedKey: historyKey,
+                month: this._popup.historyMonth,
+                day: historyDay ?? {
+                    water: 0, sun: false, walk: false, focus: 0, focusMinutes: 0,
+                },
             },
             timer: {...timer, remaining: remainingMs(timer, now)},
             activeTimer: {...active, remaining: remainingMs(active, now)},

@@ -7,6 +7,7 @@ import {sound} from './sound.js';
 import {DetailsView} from './ui/detailsView.js';
 import {HabitCard} from './ui/habitCard.js';
 import {HeatmapCard} from './ui/heatmapCard.js';
+import {HistoryView} from './ui/historyView.js';
 import {PomodoroCard} from './ui/pomodoroCard.js';
 import {SettingsView} from './ui/settingsView.js';
 import {createTomatoIcon} from './ui/tomatoIcon.js';
@@ -45,6 +46,10 @@ export class Popup {
         this._water = new WaterCard({onAdd: milliliters => app.addWater(milliliters)});
         this._heatmap = new HeatmapCard();
         this._details = new DetailsView();
+        this._history = new HistoryView({
+            onAddWater: (ms, milliliters) => app.addWaterForDay(ms, milliliters),
+            onToggleHabit: (ms, key) => app.toggleDayHabit(ms, key),
+        });
         this._pomodoro = new PomodoroCard({
             onToggle: () => app.toggleTimer(),
             onReset: () => app.resetTimer(),
@@ -82,6 +87,7 @@ export class Popup {
 
         this._pages.today = this._buildMain();
         this._pages.details = this._details.actor;
+        this._pages.history = this._history.actor;
         this._settings = new SettingsView({
             onAdjust: (key, delta) => app.adjustSetting(key, delta),
             onToggle: key => app.toggleSetting(key),
@@ -113,6 +119,18 @@ export class Popup {
 
     get detailsOpen() {
         return this.tab === 'details';
+    }
+
+    get historyOpen() {
+        return this.tab === 'history';
+    }
+
+    get historySelectedKey() {
+        return this._history.selectedKey;
+    }
+
+    get historyMonth() {
+        return this._history.monthKey;
     }
 
     get settingsOpen() {
@@ -217,6 +235,8 @@ export class Popup {
 
         if (next.key === 'settings')
             this._settings.update(this._app.state.settings);
+        else if (next.key === 'history')
+            this._history.update(this._app.state, this._app.now());
 
         if (previousKey)
             sound.play('click');
@@ -288,6 +308,15 @@ export class Popup {
         this.toggleTab('details');
     }
 
+    toggleHistory() {
+        this.toggleTab('history');
+    }
+
+    selectHistoryDay(key) {
+        this.setTab('history');
+        this._history.selectKey(key);
+    }
+
     toggleSettings() {
         this.toggleTab('settings');
     }
@@ -306,6 +335,7 @@ export class Popup {
         this._water.update(day, settings);
         this._heatmap.update(state, now);
         this._details.update(state, now);
+        this._history.update(state, now);
         this._pomodoro.update(state.timers[state.viewMode], now, day);
         this._settings.update(settings);
     }

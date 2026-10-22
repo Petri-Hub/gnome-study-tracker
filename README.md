@@ -2,7 +2,7 @@
 
 <br>
 
-<h3 align="center">A GNOME Shell extension that keeps a study routine in the top bar.<br>Sunlight, walks, water, focus blocks, weekly details and a Pomodoro clock</h3>
+<h3 align="center">A GNOME Shell extension that keeps a study routine in the top bar.<br>Sunlight, walks, water, focus blocks, weekly details, a history calendar and a Pomodoro clock</h3>
 
 <p align="center">
   <img alt="GNOME Shell 49" src="https://img.shields.io/badge/GNOME%20Shell-49-4A86CF?logo=gnome&logoColor=white" />
@@ -15,7 +15,7 @@
 
 ## About
 
-> **TL;DR:** Study Tracker puts the things I check during a study day in one small GNOME Shell popup. The top bar shows the tomato, the current tab and the timer. The popup has a Today dashboard, a Details view with weekly graphs, and settings, plus sunlight, a walk check, water, a 14-week heatmap and a 90/20 Pomodoro clock. Everything stays on the machine in a JSON file.
+> **TL;DR:** Study Tracker puts the things I check during a study day in one small GNOME Shell popup. The top bar shows the tomato, the current tab and the timer. The popup has a Today dashboard, a Details view with weekly graphs, a History calendar for correcting past days, and settings, plus sunlight, a walk check, water, a 14-week heatmap and a 90/20 Pomodoro clock. Everything stays on the machine in a JSON file.
 
 <p align="center">
   <img src="renders/popup.png" alt="Study Tracker on the Today tab, with sun, walk and water on the left, the heatmap in the middle and the Pomodoro on the right" width="860" />
@@ -42,7 +42,7 @@ The panel item sits on the left side of the top bar, after the Activities button
 
 Click the panel item to open the dashboard. It is a single dark surface with thin rules between sections, matching the top bar instead of adding another window.
 
-The header has three tabs: **Today**, **Details** and **Settings**. The Today tab uses the tomato, while Details and Settings have their own icons. Switching tabs slides and fades the content, and the page height stays fixed so the popup does not jump. The active tab stays selected when the popup is closed and reopened.
+The header has four tabs: **Today**, **Details**, **History** and **Settings**. The Today tab uses the tomato, while Details, History and Settings have their own icons. Switching tabs slides and fades the content, and the page height stays fixed so the popup does not jump. The active tab stays selected when the popup is closed and reopened.
 
 #### Today
 
@@ -54,7 +54,7 @@ Click the Sun row to switch today's sunlight on or off. The Walk row works the s
 
 ##### Heatmap
 
-The middle pane shows the last 14 weeks. Each cell is a day, coloured by the habits completed that day: the water goal, sunlight, a walk and at least one focus block. Completing all four plus a second focus block gives the brightest green. Hover a cell for its numbers, scroll or drag sideways to walk back through older weeks, and double-click to return to today.
+The middle pane shows the last 14 weeks. Each cell is a day on a green scale: partial water and partial focus already move it away from the empty colour, and the brightest green means the full water goal, sunlight, a walk and two focus blocks. Hover a cell for its numbers, scroll or drag sideways to walk back through older weeks, and double-click to return to today.
 
 ##### Pomodoro
 
@@ -68,6 +68,14 @@ The Details tab looks at the last seven days. Water has a bar chart with the dai
 
 <p align="center">
   <img src="renders/popup-details.png" alt="Study Tracker Details tab with water bars, a sun and walk grid, a focus chart and today's focus count and minutes" width="860" />
+</p>
+
+#### History
+
+The History tab is for correcting a day that was under-recorded. It opens on yesterday and shows one month at a time; each day has tiny water, sun and walk dots so you can spot the day you want. Click a day, then use the `−` and `+` buttons to change its water in the configured step, or toggle Sun and Walk. The Today button jumps back to today, and the arrows move one month at a time, up to a year back. Focus blocks stay automatic.
+
+<p align="center">
+  <img src="renders/popup-history.png" alt="Study Tracker History tab with a month calendar, the selected day and its water, sun and walk controls" width="860" />
 </p>
 
 #### Settings
@@ -84,7 +92,7 @@ The Settings tab opens the water goal, water scroll step, focus and break length
 ~/.local/share/gnome-study-tracker/state.json
 ```
 
-The file holds the daily water, sunlight, walk and focus records, both timers and the settings. It is pruned to 400 days. Older state files are migrated when the extension loads, and a custom water goal or break length is kept.
+The file holds the daily water, sunlight, walk and focus records, both timers and the settings. History edits are saved there too. It is pruned to 400 days, which is why the calendar stops a year back. Older state files are migrated when the extension loads, and a custom water goal or break length is kept.
 
 ## Install
 
@@ -144,7 +152,7 @@ The test D-Bus methods are exported only when `STUDY_TRACKER_TEST=1`, so a norma
 ├── src
 │   ├── app.js          # lifecycle, actions, timer completion
 │   ├── panel.js        # top-bar item
-│   ├── popup.js        # dashboard, details and settings
+│   ├── popup.js        # dashboard, details, history and settings
 │   ├── core            # state, timers and formatting
 │   ├── render          # Cairo drawings for water and the charts
 │   ├── ui              # St widgets for each popup section

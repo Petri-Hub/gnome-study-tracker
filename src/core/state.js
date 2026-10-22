@@ -33,6 +33,18 @@ export function dayKey(ms) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+/** Resolve a saved `YYYY-MM-DD` key to local noon, avoiding DST edges. */
+export function dayMs(key) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(key));
+    if (!match)
+        return null;
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const date = new Date(year, month - 1, day, 12);
+    return dayKey(date.getTime()) === key ? date.getTime() : null;
+}
+
 export function createState(overrides = {}) {
     const settings = normalizeSettings(overrides);
     return {
@@ -226,6 +238,34 @@ export function dayLevel(day, settings) {
     return done;
 }
 
+/**
+ * A 0..1 heatmap value for a day. The habits are weighted by progress rather
+ * than by a yes/no count: a partial water goal, a partial focus block and a
+ * second focus block all move the cell along the same green scale.
+ */
+export function dayIntensity(day, settings) {
+    if (!day)
+        return 0;
+
+    const waterGoal = Math.max(1, Number(settings.waterGoalMl) || 1);
+    const water = clamp((Number(day.water) || 0) / waterGoal, 0, 1);
+    const sun = day.sun ? 1 : 0;
+    const walk = day.walk ? 1 : 0;
+
+    const focusGoal = Math.max(1, Number(settings.focusMinutes) || 90);
+    const focusMinutes = Math.max(0, Number(day.focusMinutes) || 0);
+    const focus = focusMinutes > 0
+        ? clamp(focusMinutes / focusGoal, 0, 1.25)
+        : clamp(Number(day.focus) || 0, 0, 1.25);
+
+    // A full habit is 1; a second focus block adds a quarter so the brightest
+    // cell still means "everything done, plus extra study".
+    const progress = water + sun + walk + focus;
+    if (progress <= 0)
+        return 0;
+    return clamp(progress / 4.25, 0.12, 1);
+}
+
 export function isActive(day, settings) {
     return dayScore(day, settings) > 0;
 }
@@ -254,6 +294,7 @@ export function heatmapData(state, nowMs, weeks = 25) {
             key,
             ms: cursor.getTime(),
             level: dayLevel(day, state.settings),
+            intensity: dayIntensity(day, state.settings),
             water: day?.water ?? 0,
             sun: Boolean(day?.sun),
             walk: Boolean(day?.walk),

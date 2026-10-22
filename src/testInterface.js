@@ -1,6 +1,8 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
+import {dayMs} from './core/state.js';
+
 const OBJECT_PATH = '/org/gnome/Shell/Extensions/StudyTracker';
 
 const XML = `
@@ -34,6 +36,18 @@ const XML = `
     </method>
     <method name="ToggleDetails"/>
     <method name="ToggleSettings"/>
+    <method name="ToggleHistory"/>
+    <method name="SelectDay">
+      <arg type="s" direction="in"/>
+    </method>
+    <method name="AddDayWater">
+      <arg type="s" direction="in"/>
+      <arg type="i" direction="in"/>
+    </method>
+    <method name="ToggleDayHabit">
+      <arg type="s" direction="in"/>
+      <arg type="s" direction="in"/>
+    </method>
     <method name="AdjustSetting">
       <arg type="s" direction="in"/>
       <arg type="i" direction="in"/>
@@ -70,6 +84,18 @@ export function exportTestInterface(app) {
         SetTab: tab => app.setTab(tab),
         ToggleDetails: () => app.toggleDetails(),
         ToggleSettings: () => app.toggleSettings(),
+        ToggleHistory: () => app.toggleHistory(),
+        SelectDay: key => app.selectHistoryDay(key),
+        AddDayWater: (key, milliliters) => {
+            const ms = dayMs(key);
+            if (ms !== null)
+                app.addWaterForDay(ms, milliliters);
+        },
+        ToggleDayHabit: (key, habit) => {
+            const ms = dayMs(key);
+            if (ms !== null)
+                app.toggleDayHabit(ms, habit);
+        },
         AdjustSetting: (key, delta) => app.adjustSetting(key, delta),
         ResetSettings: () => app.resetSettings(),
         Screenshot: path => app.screenshot(path),

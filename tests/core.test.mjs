@@ -4,8 +4,10 @@ import test from 'node:test';
 import {
     addWater,
     createState,
+    dayIntensity,
     dayKey,
     dayLevel,
+    dayMs,
     dayScore,
     heatmapData,
     normalize,
@@ -101,6 +103,14 @@ test('formatting', () => {
     assert.equal(formatLiters(1250), '1.25 L');
 });
 
+test('dayMs resolves a saved day at local noon', () => {
+    const ms = dayMs('2026-10-19');
+    assert.equal(dayKey(ms), '2026-10-19');
+    assert.equal(new Date(ms).getHours(), 12);
+    assert.equal(dayMs('not-a-day'), null);
+    assert.equal(dayMs('2026-02-31'), null);
+});
+
 test('water, sun, walk and focus feed the daily score', () => {
     const state = createState();
     assert.equal(dayScore(state.days[dayKey(T0)], state.settings), 0);
@@ -121,6 +131,39 @@ test('water, sun, walk and focus feed the daily score', () => {
 
     recordFocus(state, T0, 90);
     assert.equal(dayLevel(state.days[dayKey(T0)], state.settings), 5);
+});
+
+test('heatmap intensity follows partial water and focus progress', () => {
+    const state = createState();
+    const key = dayKey(T0);
+    assert.equal(dayIntensity(undefined, state.settings), 0);
+
+    addWater(state, T0, 1000);
+    const halfWater = dayIntensity(state.days[key], state.settings);
+    addWater(state, T0, 1000);
+    const fullWater = dayIntensity(state.days[key], state.settings);
+    assert.ok(halfWater > 0 && halfWater < fullWater);
+    assert.ok(fullWater < 0.3);
+
+    toggleSun(state, T0);
+    toggleWalk(state, T0);
+    recordFocus(state, T0, 90);
+    const fourHabits = dayIntensity(state.days[key], state.settings);
+    recordFocus(state, T0, 90);
+    const twoBlocks = dayIntensity(state.days[key], state.settings);
+    assert.ok(fourHabits > 0.8 && fourHabits < twoBlocks);
+    assert.equal(twoBlocks, 1);
+
+    const cells = heatmapData(state, T0, 14).columns.flat().filter(Boolean);
+    const today = cells.at(-1);
+    assert.equal(today.key, key);
+    assert.equal(today.intensity, 1);
+
+    // A single focus block must still colour its cell; the old binary heatmap
+    // made this case almost invisible.
+    const focusOnly = createState();
+    recordFocus(focusOnly, T0, 90);
+    assert.ok(dayIntensity(focusOnly.days[key], focusOnly.settings) > 0);
 });
 
 test('legacy days keep their old heatmap scale without a walk field', () => {

@@ -43,6 +43,14 @@ for offset in range(1, 120):
         "focus": focus,
         "focusMinutes": focus * 90,
     }
+yesterday = (today - datetime.timedelta(days=1)).isoformat()
+days[yesterday] = {
+    "water": 2000,
+    "sun": True,
+    "walk": False,
+    "focus": 2,
+    "focusMinutes": 180,
+}
 with open(sys.argv[1], "w") as handle:
     json.dump({"version": 1, "days": days}, handle)
 PY
